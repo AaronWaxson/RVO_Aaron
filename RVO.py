@@ -139,7 +139,7 @@ def intersect(pA, vA, RVO_BA_all):
         #     theta_left = atan2(left[1], left[0])
     else:
         # print('Suitable not found')
-        tc_V = dict() # to collision velocity
+        tc_V = dict() # time to collision of velocity
         for unsuit_v in unsuitable_V:
             tc_V[tuple(unsuit_v)] = 0
             tc = []

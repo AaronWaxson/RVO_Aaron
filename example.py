@@ -1,5 +1,5 @@
 import sys
-
+import time 
 
 from RVO import RVO_update, reach, compute_V_des, reach
 from vis import visualize_traj_dynamic
@@ -16,15 +16,15 @@ ws_model['robot_radius'] = 0.2
 # no obstacles
 # ws_model['circular_obstacles'] = []
 # with obstacles
-# ws_model['circular_obstacles'] = [[-0.3, 1.5, 0.3], [-0.3, 3.5, 0.3],
-#                                   [1.6, 1.5, 0.3], [1.6, 3.5, 0.3], [3.3, 1.5, 0.3], [3.3, 3.5, 0.3]]
-ws_model['circular_obstacles'] = [[-0.3, 1.5, 0.3], [-0.3, 3.5, 0.3], [1.6, 1.5, 0.3], [1.6, 3.5, 0.3]]  # moving obstacles, format [x_vel, y_vel]
+ws_model['circular_obstacles'] = [[-0.3, 1.5, 0.3], [-0.3, 3.5, 0.3],
+                                  [1.6, 1.5, 0.3], [1.6, 3.5, 0.3], [3.3, 1.5, 0.3], [3.3, 3.5, 0.3]]
+# ws_model['circular_obstacles'] = [[-0.3, 1.5, 0.3]]
 ws_model['obstacle_vel'] = []
 for i in range(len(ws_model['circular_obstacles'])):
     ws_model['obstacle_vel'].append([0., 0.])
 # ws_model['obstacle_vel'] = [[0., 0.], [0., 0.], [0., 0.], [0., 0.]]
 #rectangular boundary, format [x,y,width/2,heigth/2]
-ws_model['boundary'] = [10, 10, 10, 10]
+# ws_model['boundary'] = [10, 10, 10, 10]
 
 #------------------------------
 #initialization for robot 
@@ -48,7 +48,8 @@ step = 0.01
 #------------------------------
 #simulation starts
 t = 0
-isReverse = 1 # flag to control obstacle's moving
+# flag to control obstacle's moving（0:static 1:to right -1:to left）
+isReverse = 0 
 last_obstacles = ws_model['circular_obstacles']
 # configure progress bar
 bar = ChargingBar('Processing', max=total_time*10, suffix='%(percent)d%%')
@@ -70,22 +71,22 @@ while t*step < total_time:
         bar.next()
 
     # Moving obstacles
-    co = ws_model['circular_obstacles']
-    
-    if t > 0:
-        for i in range(len(co)): 
-            # update obstacles's pos
-            ws_model['circular_obstacles'][i][0] = co[i][0] + isReverse * 0.01
-            # calculate obstacles' vel
-            ws_model['obstacle_vel'][i][0] = ws_model['circular_obstacles'][i][0] - \
-                last_obstacles[i][0]
-            ws_model['obstacle_vel'][i][1] = ws_model['circular_obstacles'][i][1] - \
-                last_obstacles[i][1]
+    if not isReverse:
+        if t > 0:
+            co = ws_model['circular_obstacles']
+            for i in range(len(co)): 
+                # update obstacles's pos
+                ws_model['circular_obstacles'][i][0] = co[i][0] + isReverse * 0.01
+                # calculate obstacles' vel
+                ws_model['obstacle_vel'][i][0] = ws_model['circular_obstacles'][i][0] - \
+                    last_obstacles[i][0]
+                ws_model['obstacle_vel'][i][1] = ws_model['circular_obstacles'][i][1] - \
+                    last_obstacles[i][1]
 
-        if t % 100 == 0:
-            isReverse = -isReverse
-    
-    last_obstacles = ws_model['circular_obstacles']
+            if t % 500 == 0:
+                isReverse = -isReverse
+        
+        last_obstacles = ws_model['circular_obstacles']
     t += 1
 
 bar.finish()
