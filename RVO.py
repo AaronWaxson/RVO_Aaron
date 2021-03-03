@@ -24,11 +24,14 @@ def RVO_update(X, V_des, V_current, ws_model):
             if i!=j:
                 vB = [V_current[j][0], V_current[j][1]]
                 pB = [X[j][0], X[j][1]]
+                dist_BA = distance(pA, pB)
+                # if dist_BA > 3*sqrt(2):
+                #     continue
                 # use RVO
                 transl_vB_vA = [pA[0]+0.5*(vB[0]+vA[0]), pA[1]+0.5*(vB[1]+vA[1])]
                 # use VO
                 #transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
-                dist_BA = distance(pA, pB)
+                # dist_BA = distance(pA, pB)
                 theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0]) 
                 if 2*ROB_RAD > dist_BA:
                     dist_BA = 2*ROB_RAD
@@ -53,10 +56,12 @@ def RVO_update(X, V_des, V_current, ws_model):
                 hole = ws_model['circular_obstacles'][k]
                 # vB = [0, 0]
                 vB = ws_model['obstacle_vel'][k]
-
+                dist_BA = distance(pA, pB)
+                # if dist_BA > 3*sqrt(2):
+                #     continue
                 pB = hole[0:2]
                 transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
-                dist_BA = distance(pA, pB)
+                # dist_BA = distance(pA, pB)
                 theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0])
                 # over-approximation of square to circular
                 OVER_APPROX_C2S = 1.5
@@ -120,6 +125,9 @@ def intersect(pA, vA, RVO_BA_all):
     if suitable_V:
         # print('Suitable found')
         vA_post = min(suitable_V, key = lambda v: distance(v, vA))
+        # print(distance(min(suitable_V),vA))
+        # print(distance(vA_post, vA))
+        # input()
         new_v = vA_post[:]
         # for RVO_BA in RVO_BA_all:
         #     p_0 = RVO_BA[0]
@@ -131,7 +139,7 @@ def intersect(pA, vA, RVO_BA_all):
         #     theta_left = atan2(left[1], left[0])
     else:
         # print('Suitable not found')
-        tc_V = dict()
+        tc_V = dict() # to collision velocity
         for unsuit_v in unsuitable_V:
             tc_V[tuple(unsuit_v)] = 0
             tc = []
@@ -157,8 +165,7 @@ def intersect(pA, vA, RVO_BA_all):
                     tc.append(tc_v)
             tc_V[tuple(unsuit_v)] = min(tc)+0.001
         WT = 0.2
-        vA_post = min(unsuitable_V, key = lambda v: ((WT/tc_V[tuple(v)])+distance(v, vA)))
-        # print(pA, vA_post)
+        vA_post = min(unsuitable_V, key = lambda v: ((WT/tc_V[tuple(v)])+distance(v, vA)))        # print(pA, vA_post)
         # input()
     return vA_post 
 
