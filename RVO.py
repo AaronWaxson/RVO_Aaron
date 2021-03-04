@@ -49,32 +49,33 @@ def RVO_update(X, V_des, V_current, ws_model):
                 RVO_BA_all.append(RVO_BA)                
         
         # RVO consisted by Obj_A and obstructs
+        RVO_OBS_ALL = []
         if len(ws_model['circular_obstacles']) > 0:
             # for hole in ws_model['circular_obstacles']:
             for k in range(len(ws_model['circular_obstacles'])):
                 # hole = [x, y, rad]
                 hole = ws_model['circular_obstacles'][k]
                 # vB = [0, 0]
-                vB = ws_model['obstacle_vel'][k]
-                dist_BA = distance(pA, pB)
-                # if dist_BA > 3*sqrt(2):
-                #     continue
+                vB = ws_model['obstacles_vel'][k]
                 pB = hole[0:2]
+                # print("{}_v:{}, p:{}".format(k, vB, pB))
+
                 transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
-                # dist_BA = distance(pA, pB)
+                dist_BA = distance(pA, pB)
                 theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0])
                 # over-approximation of square to circular
                 OVER_APPROX_C2S = 1.5
                 rad = hole[2]*OVER_APPROX_C2S
                 if (rad+ROB_RAD) > dist_BA:
                     dist_BA = rad+ROB_RAD
-                theta_BAort = asin((rad+ROB_RAD)/dist_BA)
+                theta_BAort = asin((rad+ROB_RAD)/dist_BA) # half of cone's degree
                 theta_ort_left = theta_BA+theta_BAort
                 bound_left = [cos(theta_ort_left), sin(theta_ort_left)]
                 theta_ort_right = theta_BA-theta_BAort
                 bound_right = [cos(theta_ort_right), sin(theta_ort_right)]
                 RVO_BA = [transl_vB_vA, bound_left, bound_right, dist_BA, rad+ROB_RAD]
                 RVO_BA_all.append(RVO_BA)
+                # RVO_OBS_ALL.append(RVO_BA)
         vA_post = intersect(pA, V_des[i], RVO_BA_all)
         V_opt[i] = vA_post[:]
     return V_opt
