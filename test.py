@@ -1,6 +1,25 @@
-# input()
-a = [[-0.3, 2.5, 0.3],[-0.3, 1.5, 0.3], [3.3, 1.5, 0.3], [3.3, 3.5, 0.3]]
-print(min(a))
+import matplotlib
+import matplotlib.pyplot as pyplot
+figure = pyplot.figure()
+ax = figure.add_subplot(1, 1, 1)
+srec = matplotlib.patches.Rectangle(
+    (0, 0),
+    2, 2,
+    facecolor='red',
+    fill=True,
+    alpha=1)
+ax.add_patch(srec)
+ax.arrow(1, 1, 3, 3,
+         head_width=0.05, head_length=0.1, fc='red', ec='red')
+pyplot.show()
+# # input()
+# fp = open("./bad.txt", 'w')
+# index = 2
+# fp.write("%d is bad.\n" % index)
+# fp.write("%d is bad." % index)
+# fp.close()
+# a = [[-0.3, 2.5, 0.3],[-0.3, 1.5, 0.3], [3.3, 1.5, 0.3], [3.3, 3.5, 0.3]]
+# print(min(a))
 # def alpha(a):
 #     a += 1
 #     print(a)

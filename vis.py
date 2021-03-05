@@ -10,14 +10,17 @@ import matplotlib.colors as colors
 from math import pi as PI
 from math import atan2, sin, cos, sqrt
 
-
-
 def visualize_traj_dynamic(ws_model, X, U, goal, time = None, name=None):
     figure = pyplot.figure()
     ax = figure.add_subplot(1,1,1)
     cmap = get_cmap(len(X))
     # plot obstacles
-    for hole in ws_model['circular_obstacles']:
+    # for hole in ws_model['circular_obstacles']:
+    for i in range(len(ws_model['circular_obstacles'])):
+        hole = ws_model['circular_obstacles'][i]
+        V = ws_model['obstacles_vel'][i]
+        # print(V)
+        # input()
         srec = matplotlib.patches.Rectangle(
                 (hole[0]-hole[2], hole[1]-hole[2]),
                 2*hole[2], 2*hole[2],
@@ -25,6 +28,8 @@ def visualize_traj_dynamic(ws_model, X, U, goal, time = None, name=None):
                 fill = True,
                 alpha=1)
         ax.add_patch(srec)
+        #----------plot velocity
+        ax.arrow(hole[0], hole[1], V[0]*5, V[1]*5, head_width=0.05, head_length=0.1, fc='red', ec='red')
     # ---plot traj---
     for i in range(0,len(X)):
         #-------plot car

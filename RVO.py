@@ -1,5 +1,5 @@
 from math import ceil, floor, sqrt
-import copy
+from copy import deepcopy
 import numpy
 
 from math import cos, sin, tan, atan2, asin
@@ -11,10 +11,10 @@ def distance(pose1, pose2):
     return sqrt((pose1[0]-pose2[0])**2+(pose1[1]-pose2[1])**2)+0.001
 
 
-def RVO_update(X, V_des, V_current, ws_model):
+def RVO_update(X, V_des, V_current, ws_model, fp):
     """ compute best velocity given the desired velocity, current velocity and workspace model"""
     ROB_RAD = ws_model['robot_radius']+0.1
-    V_opt = list(V_current)    
+    V_opt = list(V_current)   
     for i in range(len(X)):
         vA = [V_current[i][0], V_current[i][1]]
         pA = [X[i][0], X[i][1]]
@@ -32,7 +32,7 @@ def RVO_update(X, V_des, V_current, ws_model):
                 # use VO
                 #transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
                 # dist_BA = distance(pA, pB)
-                theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0]) 
+                theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0])
                 if 2*ROB_RAD > dist_BA:
                     dist_BA = 2*ROB_RAD
 
@@ -48,24 +48,25 @@ def RVO_update(X, V_des, V_current, ws_model):
                 RVO_BA = [transl_vB_vA, bound_left, bound_right, dist_BA, 2*ROB_RAD]
                 RVO_BA_all.append(RVO_BA)                
         
-        # RVO consisted by Obj_A and obstructs
-        RVO_OBS_ALL = []
-        if len(ws_model['circular_obstacles']) > 0:
-            # for hole in ws_model['circular_obstacles']:
-            for k in range(len(ws_model['circular_obstacles'])):
-                # hole = [x, y, rad]
-                hole = ws_model['circular_obstacles'][k]
+        # VO consisted by Obj_A and obstructs
+        obs_num = len(ws_model['circular_obstacles'])
+        if  obs_num > 0:
+            # for obstacle in ws_model['circular_obstacles']:
+            for k in range(obs_num):
+                # obstacle = [x, y, rad]
+                obstacle = ws_model['circular_obstacles'][k]
                 # vB = [0, 0]
                 vB = ws_model['obstacles_vel'][k]
-                pB = hole[0:2]
-                # print("{}_v:{}, p:{}".format(k, vB, pB))
+                pB = obstacle[0:2]
 
                 transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
                 dist_BA = distance(pA, pB)
                 theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0])
+                fp.write("{}___v:{}, pB:{}, pA:{}, t:{}, d:{}, t_BA:{}\n".format(i, vB, pB, pA, transl_vB_vA, dist_BA, theta_BA))
+
                 # over-approximation of square to circular
                 OVER_APPROX_C2S = 1.5
-                rad = hole[2]*OVER_APPROX_C2S
+                rad = obstacle[2]*OVER_APPROX_C2S
                 if (rad+ROB_RAD) > dist_BA:
                     dist_BA = rad+ROB_RAD
                 theta_BAort = asin((rad+ROB_RAD)/dist_BA) # half of cone's degree
@@ -73,11 +74,13 @@ def RVO_update(X, V_des, V_current, ws_model):
                 bound_left = [cos(theta_ort_left), sin(theta_ort_left)]
                 theta_ort_right = theta_BA-theta_BAort
                 bound_right = [cos(theta_ort_right), sin(theta_ort_right)]
+                fp.write("r:{}, d:{}, ba:{}, l:{}, r:{}\n".format(rad+ROB_RAD, dist_BA, theta_BAort, theta_ort_left, theta_ort_right))
                 RVO_BA = [transl_vB_vA, bound_left, bound_right, dist_BA, rad+ROB_RAD]
                 RVO_BA_all.append(RVO_BA)
                 # RVO_OBS_ALL.append(RVO_BA)
         vA_post = intersect(pA, V_des[i], RVO_BA_all)
         V_opt[i] = vA_post[:]
+    # input()
     return V_opt
 
 def intersect(pA, vA, RVO_BA_all):
@@ -86,6 +89,7 @@ def intersect(pA, vA, RVO_BA_all):
     norm_v = distance(vA, [0, 0])
     suitable_V = []
     unsuitable_V = []
+    index = 1
     for theta in numpy.arange(0, 2*PI, 0.1): # sample vel vector
         for rad in numpy.arange(0.02, norm_v+0.02, norm_v/5.0): # sample vel scalar
             new_v = [rad*cos(theta), rad*sin(theta)]
@@ -101,10 +105,12 @@ def intersect(pA, vA, RVO_BA_all):
                 if in_between(theta_right, theta_dif, theta_left):
                     suit = False
                     break
+                index += 1
             if suit:
                 suitable_V.append(new_v)
             else:
-                unsuitable_V.append(new_v)                
+                unsuitable_V.append(new_v)   
+
     new_v = vA[:]
     suit = True
     for RVO_BA in RVO_BA_all:                
@@ -166,7 +172,8 @@ def intersect(pA, vA, RVO_BA_all):
                     tc.append(tc_v)
             tc_V[tuple(unsuit_v)] = min(tc)+0.001
         WT = 0.2
-        vA_post = min(unsuitable_V, key = lambda v: ((WT/tc_V[tuple(v)])+distance(v, vA)))        # print(pA, vA_post)
+        vA_post = min(unsuitable_V, key = lambda v: ((WT/tc_V[tuple(v)])+distance(v, vA)))       
+        # print("\np:{}, v:{}".format(pA, vA_post))
         # input()
     return vA_post 
 
