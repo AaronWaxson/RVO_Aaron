@@ -11,8 +11,8 @@ def distance(pose1, pose2):
     return sqrt((pose1[0]-pose2[0])**2+(pose1[1]-pose2[1])**2)+0.001
 
 
-def RVO_update(X, V_des, V_current, ws_model, fp):
-    """ compute best velocity given the desired velocity, current velocity and workspace model"""
+def RVO_update(X, V_des, V_current, ws_model):
+    """compute best velocity given the desired velocity, current velocity and workspace model"""
     ROB_RAD = ws_model['robot_radius']+0.1
     V_opt = list(V_current)   
     for i in range(len(X)):
@@ -62,7 +62,7 @@ def RVO_update(X, V_des, V_current, ws_model, fp):
                 transl_vB_vA = [pA[0]+vB[0], pA[1]+vB[1]]
                 dist_BA = distance(pA, pB)
                 theta_BA = atan2(pB[1]-pA[1], pB[0]-pA[0])
-                fp.write("{}___v:{}, pB:{}, pA:{}, t:{}, d:{}, t_BA:{}\n".format(i, vB, pB, pA, transl_vB_vA, dist_BA, theta_BA))
+                # fp.write("{}___v:{}, pB:{}, pA:{}, t:{}, d:{}, t_BA:{}\n".format(i, vB, pB, pA, transl_vB_vA, dist_BA, theta_BA))
 
                 # over-approximation of square to circular
                 OVER_APPROX_C2S = 1.5
@@ -74,12 +74,16 @@ def RVO_update(X, V_des, V_current, ws_model, fp):
                 bound_left = [cos(theta_ort_left), sin(theta_ort_left)]
                 theta_ort_right = theta_BA-theta_BAort
                 bound_right = [cos(theta_ort_right), sin(theta_ort_right)]
-                fp.write("r:{}, d:{}, ba:{}, l:{}, r:{}\n".format(rad+ROB_RAD, dist_BA, theta_BAort, theta_ort_left, theta_ort_right))
+                # fp.write("r:{}, d:{}, ba:{}, l:{}, r:{}\n".format(rad+ROB_RAD, dist_BA, theta_BAort, theta_ort_left, theta_ort_right))
                 RVO_BA = [transl_vB_vA, bound_left, bound_right, dist_BA, rad+ROB_RAD]
                 RVO_BA_all.append(RVO_BA)
                 # RVO_OBS_ALL.append(RVO_BA)
         vA_post = intersect(pA, V_des[i], RVO_BA_all)
         V_opt[i] = vA_post[:]
+
+        # if distance(V_opt[i], vA) > 0.05:
+        #     print("\n{}__dist: {}, opt: {}, des: {} ".format(i, dist_BA, V_opt[i], vA))
+        #     input()
     # input()
     return V_opt
 

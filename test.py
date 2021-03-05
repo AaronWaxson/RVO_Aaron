@@ -1,17 +1,25 @@
+X = [[-0.5+1.0*i, 0.0] for i in range(7)]
+print(X)
+
+
 import matplotlib
 import matplotlib.pyplot as pyplot
-figure = pyplot.figure()
-ax = figure.add_subplot(1, 1, 1)
-srec = matplotlib.patches.Rectangle(
-    (0, 0),
-    2, 2,
-    facecolor='red',
-    fill=True,
-    alpha=1)
-ax.add_patch(srec)
-ax.arrow(1, 1, 3, 3,
-         head_width=0.05, head_length=0.1, fc='red', ec='red')
+# figure = pyplot.figure()
+# ax = figure.add_subplot(1, 1, 1)
+# srec = matplotlib.patches.Rectangle(
+#     (0, 0),
+#     2, 2,
+#     facecolor='red',
+#     fill=True,
+#     alpha=1)
+# ax.add_patch(srec)
+# ax.arrow(1, 1, 3, 3,
+#          head_width=0.05, head_length=0.1, fc='red', ec='red')
+a = [[-0.3, 2.5, 0.3],[-0.3, 1.5, 0.3]]
+pyplot.plot([x[0] for x in a], [x[1] for x in a], '-')
 pyplot.show()
+
+
 # # input()
 # fp = open("./bad.txt", 'w')
 # index = 2
